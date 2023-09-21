@@ -1,4 +1,4 @@
-The primary difference from the official SDK generator is that for the Java Server SDK, this once would take title id and developer secret in each individual request as opposed to a static setting.
+## The primary difference from the official SDK generator is that for the Java Server SDK, this once would take title id and developer secret in each individual request as opposed to a static setting.
 
 # PlayFab SDK Generator README
 
