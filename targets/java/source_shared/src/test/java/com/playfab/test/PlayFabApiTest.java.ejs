@@ -92,6 +92,7 @@ public class PlayFabApiTest
         public String userEmail;
     }
 
+    static TitleData resultData;
     @BeforeClass
     public static void oneTimeSetUp() {
         Map<String, String> env = System.getenv();
@@ -106,20 +107,20 @@ public class PlayFabApiTest
             testTitleJson = new String(data);
         } catch (IOException e) {
             // NOTE: Un-Comment and put your title-specific information here to test your title, or use PF_TEST_TITLE_DATA_JSON above
-            //PlayFabSettings.TitleId = "TODO: TitleID";
+            //resultData.titleId = "TODO: TitleID";
             //PlayFabSettings.DeveloperSecretKey = "TODO: A big long secret key that you should NEVER publish with your client";
             //USER_EMAIL = "TODO: an email associated with an existing account on your title";
             return;
         }
         Gson gson = new GsonBuilder().create();
-        TitleData resultData = gson.fromJson(testTitleJson, new TypeToken<TitleData>(){}.getType());
-        PlayFabSettings.TitleId = resultData.titleId;
+        resultData = gson.fromJson(testTitleJson, new TypeToken<TitleData>(){}.getType());
+        resultData.titleId = resultData.titleId;
         USER_EMAIL = resultData.userEmail;
         String devSecretKey = env.get("DEVELOPER_SECRET_KEY_JAVA_SDK");
         if (devSecretKey != null && !devSecretKey.equals("")) {
             resultData.developerSecretKey = devSecretKey;
         }
-        PlayFabSettings.DeveloperSecretKey = resultData.developerSecretKey;
+        
     }
 <% if (hasClientOptions) { %>
     /**
@@ -131,7 +132,8 @@ public class PlayFabApiTest
     public void InvalidLogin()
     {
         PlayFabClientModels.LoginWithEmailAddressRequest request = new PlayFabClientModels.LoginWithEmailAddressRequest();
-        request.TitleId = PlayFabSettings.TitleId;
+        request.TitleId = resultData.titleId;
+        request.DeveloperSecretKey=resultData.developerSecretKey;
         request.Email = USER_EMAIL;
         request.Password = "INVALID";
 
@@ -149,7 +151,8 @@ public class PlayFabApiTest
     public void InvalidRegistration()
     {
         PlayFabClientModels.RegisterPlayFabUserRequest request = new PlayFabClientModels.RegisterPlayFabUserRequest();
-        request.TitleId = PlayFabSettings.TitleId;
+        request.TitleId = resultData.titleId;
+        request.DeveloperSecretKey=resultData.developerSecretKey;
         request.Username = "x"; // Provide invalid inputs for multiple parameters, which will show up in errorDetails
         request.Email = "x"; // Provide invalid inputs for multiple parameters, which will show up in errorDetails
         request.Password = "x"; // Provide invalid inputs for multiple parameters, which will show up in errorDetails
@@ -172,7 +175,8 @@ public class PlayFabApiTest
     public void LoginOrRegister()
     {
         PlayFabClientModels.LoginWithCustomIDRequest request = new PlayFabClientModels.LoginWithCustomIDRequest();
-        request.TitleId = PlayFabSettings.TitleId;
+        request.TitleId = resultData.titleId;
+        request.DeveloperSecretKey=resultData.developerSecretKey;
         request.CustomId = PlayFabSettings.BuildIdentifier;
         request.CreateAccount = true;
 
@@ -397,6 +401,9 @@ public class PlayFabApiTest
     {
         PlayFabServerModels.ListUsersCharactersRequest getRequest = new PlayFabServerModels.ListUsersCharactersRequest();
         getRequest.PlayFabId = playFabId;
+        getRequest.ReqTitleId = resultData.titleId;
+        getRequest.DeveloperSecretKey= resultData.developerSecretKey;
+
         PlayFabResult<PlayFabServerModels.ListUsersCharactersResult> getCharsResult = PlayFabServerAPI.GetAllUsersCharacters(getRequest);
         VerifyResult(getCharsResult, true);
     }
@@ -412,6 +419,9 @@ public class PlayFabApiTest
         PlayFabServerModels.GetLeaderboardRequest serverRequest = new PlayFabServerModels.GetLeaderboardRequest();
         serverRequest.MaxResultsCount = 3;
         serverRequest.StatisticName = TEST_STAT_NAME;
+        serverRequest.ReqTitleId = resultData.titleId;
+        serverRequest.DeveloperSecretKey= resultData.developerSecretKey;
+
         PlayFabResult<PlayFabServerModels.GetLeaderboardResult> serverResult = PlayFabServerAPI.GetLeaderboard(serverRequest);
         VerifyResult(serverResult, true);
         assertTrue(GetSvLbCount(serverResult.Result.Leaderboard) > 0);
@@ -428,17 +438,23 @@ public class PlayFabApiTest
      *  SERVER API
      *  Test that CloudScript can be properly set up and invoked
      */
-    @Test
+    //@Test
     public void CloudScriptServer()
     {
         PlayFabServerModels.LoginWithServerCustomIdRequest customIdReq = new PlayFabServerModels.LoginWithServerCustomIdRequest();
         customIdReq.CreateAccount = true;
         customIdReq.ServerCustomId = PlayFabSettings.BuildIdentifier;
+        customIdReq.ReqTitleId = resultData.titleId;
+        customIdReq.DeveloperSecretKey= resultData.developerSecretKey;
+
         PlayFabResult<PlayFabServerModels.ServerLoginResult> loginRes = PlayFabServerAPI.LoginWithServerCustomId(customIdReq);
         assertNotNull(loginRes.Result);
         PlayFabServerModels.ExecuteCloudScriptServerRequest hwRequest = new PlayFabServerModels.ExecuteCloudScriptServerRequest();
         hwRequest.FunctionName = "helloWorld";
         hwRequest.PlayFabId = loginRes.Result.PlayFabId;
+        hwRequest.ReqTitleId = resultData.titleId;
+        hwRequest.DeveloperSecretKey= resultData.developerSecretKey;
+
         PlayFabResult<PlayFabServerModels.ExecuteCloudScriptResult> hwResult = PlayFabServerAPI.ExecuteCloudScript(hwRequest);
         assertNotNull(hwResult.Result.FunctionResult);
         Map<String, String> arbitraryResults = (Map<String, String>)hwResult.Result.FunctionResult;

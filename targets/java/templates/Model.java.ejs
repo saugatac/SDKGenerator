@@ -1,6 +1,13 @@
 <%- generateApiSummary("    ", datatype, "description")
-%>    public static class <%- datatype.name %><% if (datatype.sortKey) { %> implements Comparable<<%- datatype.name %>><% } %> {<% for(var i in datatype.properties) { var property = datatype.properties[i] %>
-<%- generateApiSummary("        ", property, "description")
+%>    public static class <%- datatype.name %><% if (datatype.sortKey) { %> implements Comparable<<%- datatype.name %>><% } %> {
+    
+    <% if(datatype.name.endsWith("Request")) { %>
+        public String ReqTitleId;
+        public String DeveloperSecretKey;
+        <%}%>
+    
+    <% for(var i in datatype.properties) { var property = datatype.properties[i] %>
+    <%- generateApiSummary("        ", property, "description")
 %><%- getPropertyAttribs("        ", property, datatype, api)
 %>        public <%- getPropertyDef(property, datatype) %>;<% } %>
         <% if (datatype.sortKey) { %>
