@@ -22,16 +22,16 @@ public class PlayFabSettings {
 
     public static String ProductionEnvironmentUrl = ".playfabapi.com"; // This is only for customers running a private cluster.  Generally you shouldn't touch this
     public static String VerticalName = <%- getVerticalNameDefault() %>; // The name of a customer vertical. This is only for customers running a private cluster. Generally you shouldn't touch this
-    //public static String TitleId = null; // You must set this value for PlayFabSdk to work properly (Found in the Game Manager for your title, at the PlayFab Website)
+    public static String TitleId = null; // You must set this value for PlayFabSdk to work properly (Found in the Game Manager for your title, at the PlayFab Website)
     public static ErrorCallback GlobalErrorHandler;
     public static String EntityToken = null; // Set by GetEntityToken
-    //public static String DeveloperSecretKey = null; // You must set this value for PlayFabSdk to work properly (Found in the Game Manager for your title, at the PlayFab Website)
+    public static String DeveloperSecretKey = null; // You must set this value for PlayFabSdk to work properly (Found in the Game Manager for your title, at the PlayFab Website)
     public static String ClientSessionTicket = null; // Set by any Client Login Call
 <% if (hasClientOptions) {
 %><% if (isAndroid) { %>    public static Context androidContext = null; // Context object for android devices
 <% } %>
 <% } %>
-    public static String GetURL(String apiCall, String TitleId) {
+    public static String GetURL(String apiCall) {
         StringBuilder sb = new StringBuilder(1000);
 
         String baseUrl = ProductionEnvironmentUrl;
