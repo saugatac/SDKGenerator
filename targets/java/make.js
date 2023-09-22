@@ -207,7 +207,7 @@ function getAuthParams(apiCall) {
     if (apiCall.auth === "EntityToken")
         return "\"X-EntityToken\", PlayFabSettings.EntityToken";
     if (apiCall.auth === "SecretKey")
-        return "\"X-SecretKey\", PlayFabSettings.DeveloperSecretKey";
+        return "\"X-SecretKey\", PlayFabSettings.TitleSecrets.get(request.ReqTitleId)";
     if (apiCall.auth === "SessionTicket")
         return "\"X-Authorization\", PlayFabSettings.ClientSessionTicket";
     if (apiCall.url === "/Authentication/GetEntityToken")
@@ -217,17 +217,17 @@ function getAuthParams(apiCall) {
 
 function getRequestActions(tabbing, apiCall) {
     if (apiCall.result === "LoginResult" || apiCall.request === "RegisterPlayFabUserRequest")
-        return tabbing + "request.TitleId = PlayFabSettings.TitleId != null ? PlayFabSettings.TitleId : request.TitleId;\n"
-            + tabbing + "if (request.TitleId == null) throw new Exception (\"Must be have PlayFabSettings.TitleId set to call this method\");\n";
+        return tabbing + "request.TitleId = request.ReqTitleId != null ? request.ReqTitleId : request.TitleId;\n"
+            + tabbing + "if (request.TitleId == null) throw new Exception (\"Must be have request.ReqTitleId set to call this method\");\n";
     if (apiCall.url === "/Authentication/GetEntityToken")
         return tabbing + "String authKey = null, authValue = null;\n"
             + tabbing + "if (PlayFabSettings.EntityToken != null) { authKey = \"X-EntityToken\"; authValue = PlayFabSettings.EntityToken; }\n"
             + tabbing + "else if (PlayFabSettings.ClientSessionTicket != null) { authKey = \"X-Authorization\"; authValue = PlayFabSettings.ClientSessionTicket; }\n"
-            + tabbing + "else if (PlayFabSettings.DeveloperSecretKey != null) { authKey = \"X-SecretKey\"; authValue = PlayFabSettings.DeveloperSecretKey; }\n";
+            + tabbing + "else if (PlayFabSettings.TitleSecrets.get(request.ReqTitleId) != null) { authKey = \"X-SecretKey\"; authValue = PlayFabSettings.TitleSecrets.get(request.ReqTitleId); }\n";
     if (apiCall.auth === "SessionTicket")
         return tabbing + "if (PlayFabSettings.ClientSessionTicket == null) throw new Exception (\"Must be logged in to call this method\");\n";
     if (apiCall.auth === "SecretKey")
-        return tabbing + "if (PlayFabSettings.DeveloperSecretKey == null) throw new Exception (\"Must have PlayFabSettings.DeveloperSecretKey set to call this method\");\n";
+        return tabbing + "if (PlayFabSettings.TitleSecrets.get(request.ReqTitleId) == null) throw new Exception (\"Must have PlayFabSettings.TitleSecrets.get(request.ReqTitleId) set to call this method\");\n";
     if (apiCall.auth === "EntityToken")
         return tabbing + "if (PlayFabSettings.EntityToken == null) throw new Exception (\"Must call GetEntityToken before you can use the Entity API\");\n";
     return "";
@@ -247,7 +247,7 @@ function getResultActions(tabbing, apiCall) {
 }
 
 function getUrlAccessor(apiCallUrl) {
-    return "PlayFabSettings.GetURL(\"" + apiCallUrl + "\")";
+    return "PlayFabSettings.GetURL(\"" + apiCallUrl + "\",request.ReqTitleId)";
 }
 
 function generateApiSummary(tabbing, apiElement, summaryParam, extraLines) {

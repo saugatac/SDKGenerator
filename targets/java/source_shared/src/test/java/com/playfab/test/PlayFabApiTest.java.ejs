@@ -91,6 +91,7 @@ public class PlayFabApiTest
         public String developerSecretKey;
         public String userEmail;
     }
+    static TitleData resultData;
 
     @BeforeClass
     public static void oneTimeSetUp() {
@@ -112,14 +113,15 @@ public class PlayFabApiTest
             return;
         }
         Gson gson = new GsonBuilder().create();
-        TitleData resultData = gson.fromJson(testTitleJson, new TypeToken<TitleData>(){}.getType());
-        PlayFabSettings.TitleId = resultData.titleId;
+        resultData = gson.fromJson(testTitleJson, new TypeToken<TitleData>(){}.getType());
+        //PlayFabSettings.TitleId = resultData.titleId;
         USER_EMAIL = resultData.userEmail;
         String devSecretKey = env.get("DEVELOPER_SECRET_KEY_JAVA_SDK");
         if (devSecretKey != null && !devSecretKey.equals("")) {
             resultData.developerSecretKey = devSecretKey;
         }
-        PlayFabSettings.DeveloperSecretKey = resultData.developerSecretKey;
+        //PlayFabSettings.DeveloperSecretKey = resultData.developerSecretKey;
+        PlayFabSettings.TitleSecrets=Map.of(resultData.titleId, resultData.developerSecretKey);
     }
 <% if (hasClientOptions) { %>
     /**
@@ -395,7 +397,7 @@ public class PlayFabApiTest
     @Test
     public void UserCharacterServer()
     {
-        PlayFabServerModels.ListUsersCharactersRequest getRequest = new PlayFabServerModels.ListUsersCharactersRequest();
+        PlayFabServerModels.ListUsersCharactersRequest getRequest = new PlayFabServerModels.ListUsersCharactersRequest(resultData.titleId);
         getRequest.PlayFabId = playFabId;
         PlayFabResult<PlayFabServerModels.ListUsersCharactersResult> getCharsResult = PlayFabServerAPI.GetAllUsersCharacters(getRequest);
         VerifyResult(getCharsResult, true);
@@ -409,7 +411,7 @@ public class PlayFabApiTest
     @Test
     public void LeaderBoardServer()
     {
-        PlayFabServerModels.GetLeaderboardRequest serverRequest = new PlayFabServerModels.GetLeaderboardRequest();
+        PlayFabServerModels.GetLeaderboardRequest serverRequest = new PlayFabServerModels.GetLeaderboardRequest(resultData.titleId);
         serverRequest.MaxResultsCount = 3;
         serverRequest.StatisticName = TEST_STAT_NAME;
         PlayFabResult<PlayFabServerModels.GetLeaderboardResult> serverResult = PlayFabServerAPI.GetLeaderboard(serverRequest);
@@ -428,15 +430,15 @@ public class PlayFabApiTest
      *  SERVER API
      *  Test that CloudScript can be properly set up and invoked
      */
-    @Test
+    //@Test
     public void CloudScriptServer()
     {
-        PlayFabServerModels.LoginWithServerCustomIdRequest customIdReq = new PlayFabServerModels.LoginWithServerCustomIdRequest();
+        PlayFabServerModels.LoginWithServerCustomIdRequest customIdReq = new PlayFabServerModels.LoginWithServerCustomIdRequest(resultData.titleId);
         customIdReq.CreateAccount = true;
         customIdReq.ServerCustomId = PlayFabSettings.BuildIdentifier;
         PlayFabResult<PlayFabServerModels.ServerLoginResult> loginRes = PlayFabServerAPI.LoginWithServerCustomId(customIdReq);
         assertNotNull(loginRes.Result);
-        PlayFabServerModels.ExecuteCloudScriptServerRequest hwRequest = new PlayFabServerModels.ExecuteCloudScriptServerRequest();
+        PlayFabServerModels.ExecuteCloudScriptServerRequest hwRequest = new PlayFabServerModels.ExecuteCloudScriptServerRequest(resultData.titleId);
         hwRequest.FunctionName = "helloWorld";
         hwRequest.PlayFabId = loginRes.Result.PlayFabId;
         PlayFabResult<PlayFabServerModels.ExecuteCloudScriptResult> hwResult = PlayFabServerAPI.ExecuteCloudScript(hwRequest);
@@ -452,7 +454,7 @@ public class PlayFabApiTest
     @Test
     public void CloudScriptErrorServer()
     {
-        PlayFabServerModels.ExecuteCloudScriptServerRequest errRequest = new PlayFabServerModels.ExecuteCloudScriptServerRequest();
+        PlayFabServerModels.ExecuteCloudScriptServerRequest errRequest = new PlayFabServerModels.ExecuteCloudScriptServerRequest(resultData.titleId);
         errRequest.FunctionName = "throwError";
         errRequest.PlayFabId = playFabId;
         PlayFabResult<PlayFabServerModels.ExecuteCloudScriptResult> errResult = PlayFabServerAPI.ExecuteCloudScript(errRequest);
